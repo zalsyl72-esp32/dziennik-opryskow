@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dziennik oprysków</title>
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#2A2A22" />
+<link rel="icon" href="icon-192.png" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<style>
+*{box-sizing:border-box;}
+body{margin:0;background:#EAE3D2;font-family:system-ui,-apple-system,sans-serif;color:#2A2A22;}
+.container{max-width:480px;margin:0 auto;padding:20px 16px 48px;}
+h1{font-size:24px;font-weight:900;text-transform:uppercase;letter-spacing:-0.5px;margin:0;}
+.subtitle{font-size:12px;color:#6B6356;margin:2px 0 16px;}
+.loading{font-size:14px;color:#6B6356;padding:20px 16px;}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.section-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#6B6356;display:block;}
+.icon-btn{border:none;background:transparent;cursor:pointer;font-size:14px;padding:4px;border-radius:6px;color:#6B6356;}
+.icon-btn-danger{border:none;background:transparent;cursor:pointer;font-size:14px;padding:4px;border-radius:6px;color:#9C3E27;}
+.crops-row{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{position:relative;}
+.chip-btn{padding:6px 12px;border-radius:8px;font-size:14px;font-weight:700;border:2px solid #D6CDB3;background:#F7F3E8;cursor:pointer;}
+.chip-del{position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:#9C3E27;color:#fff;font-size:12px;line-height:1;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;padding:0;}
+.chip-add{padding:6px 12px;border-radius:8px;font-size:14px;font-weight:700;border:2px dashed #D6CDB3;background:transparent;color:#6B6356;cursor:pointer;display:flex;align-items:center;gap:4px;}
+.add-crop-form{display:flex;align-items:center;gap:4px;}
+.add-crop-form input{padding:6px 8px;border-radius:8px;border:2px solid #D6CDB3;font-size:14px;width:120px;background:#F7F3E8;color:#2A2A22;}
+.icon-btn-solid{border:none;background:#2A2A22;color:#F7F3E8;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px;}
+.icon-btn-outline{border:2px solid #D6CDB3;background:transparent;color:#6B6356;border-radius:8px;padding:5px 9px;cursor:pointer;font-size:14px;}
+.empty-msg{font-size:14px;color:#6B6356;padding:12px 0;}
+.summary-block{margin-top:20px;}
+.summary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:6px;}
+@media(min-width:420px){.summary-grid{grid-template-columns:repeat(3,1fr);}}
+.summary-card{border-radius:8px;padding:8px;border-left:4px solid;}
+.summary-cat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
+.summary-date{font-size:14px;font-weight:700;color:#2A2A22;margin-top:2px;}
+.summary-product{font-size:12px;color:#6B6356;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.summary-empty{font-size:12px;color:#6B6356;margin-top:2px;}
+.form-card{margin-top:16px;border-radius:12px;padding:12px;border:2px solid #D6CDB3;background:#F7F3E8;}
+.date-input{width:100%;padding:8px;border-radius:8px;border:2px solid #D6CDB3;font-size:14px;font-family:ui-monospace,monospace;background:#F1EADC;color:#2A2A22;margin-bottom:8px;}
+.cat-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.cat-btn{padding:6px 10px;border-radius:8px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;border:2px solid;cursor:pointer;}
+.text-input{width:100%;padding:8px;border-radius:8px;border:2px solid #D6CDB3;font-size:14px;background:#F1EADC;color:#2A2A22;margin-bottom:8px;}
+.form-error{font-size:12px;color:#9C3E27;font-weight:700;margin:0 0 8px;}
+.form-actions{display:flex;gap:8px;}
+.btn-primary{flex:1;padding:10px;border-radius:8px;border:none;background:#2A2A22;color:#F7F3E8;font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:0.3px;cursor:pointer;}
+.btn-secondary{padding:10px 14px;border-radius:8px;border:2px solid #D6CDB3;background:transparent;color:#6B6356;font-weight:700;font-size:14px;cursor:pointer;}
+.filter-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px;margin-bottom:4px;}
+.filter-btn{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;border:2px solid;cursor:pointer;background:transparent;}
+.month-group{margin-bottom:12px;}
+.month-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#6B6356;border-bottom:1px solid #D6CDB3;padding-bottom:4px;margin-bottom:4px;}
+.entry-row{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #D6CDB3;}
+.entry-date{display:flex;flex-direction:column;align-items:center;width:48px;flex-shrink:0;padding-top:2px;}
+.entry-date-num{font-size:14px;font-weight:700;font-family:ui-monospace,monospace;color:#2A2A22;}
+.entry-date-wd{font-size:10px;text-transform:uppercase;color:#6B6356;}
+.entry-badge-wrap{flex-shrink:0;padding-top:2px;}
+.entry-badge{display:inline-block;padding:2px 6px;font-size:10px;font-weight:900;text-transform:uppercase;border:2px solid;border-radius:3px;}
+.entry-body{flex:1;min-width:0;}
+.entry-product{font-size:14px;font-weight:700;color:#2A2A22;}
+.entry-note{font-size:12px;font-style:italic;color:#6B6356;}
+.entry-actions{display:flex;gap:4px;flex-shrink:0;}
+.confirm-btn{border:none;background:#9C3E27;color:#fff;font-size:10px;font-weight:700;border-radius:6px;padding:4px 6px;cursor:pointer;}
+.backup-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.backup-btn{padding:6px 10px;border-radius:8px;font-size:12px;font-weight:700;border:2px solid #D6CDB3;background:transparent;color:#6B6356;cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var STORAGE_KEY = "dziennik-opryskow-v1";
+var INK = "#2A2A22", INK_SOFT = "#6B6356", LINE = "#D6CDB3", SURFACE = "#F7F3E8", DANGER = "#9C3E27";
+
+var CATEGORIES = [
+  { id: "grzyb", label: "Grzyb", short: "G", accent: "#3D6E8C", tint: "#E1EAF0", rotate: -3 },
+  { id: "chwast", label: "Chwast", short: "C", accent: "#A8791E", tint: "#F2E8D2", rotate: 2 },
+  { id: "robak", label: "Robak", short: "R", accent: "#9C3E27", tint: "#F1E0D9", rotate: -2 },
+  { id: "odzywka", label: "Odżywka", short: "O", accent: "#3F6B33", tint: "#E3ECDD", rotate: 3 },
+  { id: "inne", label: "Inne", short: "I", accent: "#5F5848", tint: "#EAE6DC", rotate: 0 }
+];
+
+var MONTHS = ["Styczeń","Luty","Marzec","Kwiecień","Maj","Czerwiec","Lipiec","Sierpień","Wrzesień","Październik","Listopad","Grudzień"];
+var WEEKDAYS = ["nd","pon","wt","śr","czw","pt","sob"];
+
+var state = {
+  loaded: false,
+  crops: [],
+  entries: [],
+  selectedCropId: null,
+  manageCrops: false,
+  addingCrop: false,
+  newCropName: "",
+  confirmDeleteCropId: null,
+  formDate: todayStr(),
+  formCategory: null,
+  formProduct: "",
+  formNote: "",
+  formError: "",
+  editingId: null,
+  filterCategory: "all",
+  confirmDeleteId: null
+};
+
+function genId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+
+function todayStr(){
+  var d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+
+function parseDateLocal(dateStr){
+  var p = dateStr.split("-").map(Number);
+  return new Date(p[0], p[1]-1, p[2]);
+}
+
+function formatDateDisplay(dateStr){
+  var dt = parseDateLocal(dateStr);
+  var dd = String(dt.getDate()).padStart(2,"0");
+  var mm = String(dt.getMonth()+1).padStart(2,"0");
+  var yyyy = dt.getFullYear();
+  return { dd:dd, mm:mm, yyyy:yyyy, wd:WEEKDAYS[dt.getDay()], full: dd+"."+mm+"."+yyyy };
+}
+
+function monthLabelFromKey(key){
+  var p = key.split("-").map(Number);
+  return MONTHS[p[1]-1] + " " + p[0];
+}
+
+function esc(s){
+  if(s == null) s = "";
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+function loadState(){
+  try{
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      var data = JSON.parse(raw);
+      state.crops = data.crops || [];
+      state.entries = data.entries || [];
+      state.selectedCropId = state.crops[0] ? state.crops[0].id : null;
+    } else {
+      seedDefaults();
+    }
+  } catch(e){
+    seedDefaults();
+  }
+  state.loaded = true;
+}
+
+function seedDefaults(){
+  var defaults = ["Ogórki","Maliny","Truskawki","Ziemniaki"].map(function(name){ return { id: genId(), name: name }; });
+  state.crops = defaults;
+  state.entries = [];
+  state.selectedCropId = defaults[0].id;
+  persist();
+}
+
+function persist(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ crops: state.crops, entries: state.entries }));
+  } catch(e){
+    console.error("Zapis nie powiódł się", e);
+  }
+}
+
+function resetFormFields(){
+  state.formDate = todayStr();
+  state.formCategory = null;
+  state.formProduct = "";
+  state.formNote = "";
+  state.formError = "";
+  state.editingId = null;
+}
+
+function productSuggestions(){
+  var cropEntries = state.entries.filter(function(e){ return e.cropId === state.selectedCropId; });
+  var filtered = cropEntries.filter(function(e){ return !state.formCategory || e.category === state.formCategory; });
+  var set = {};
+  var out = [];
+  filtered.forEach(function(e){ if(!set[e.product]){ set[e.product]=true; out.push(e.product); } });
+  return out;
+}
+
+function addCrop(){
+  var name = (state.newCropName || "").trim();
+  if(!name) return;
+  var crop = { id: genId(), name: name };
+  state.crops.push(crop);
+  state.selectedCropId = crop.id;
+  state.newCropName = "";
+  state.addingCrop = false;
+  persist();
+  render();
+}
+
+function deleteCrop(id){
+  state.crops = state.crops.filter(function(c){ return c.id !== id; });
+  state.entries = state.entries.filter(function(e){ return e.cropId !== id; });
+  state.confirmDeleteCropId = null;
+  resetFormFields();
+  if(state.selectedCropId === id){
+    state.selectedCropId = state.crops[0] ? state.crops[0].id : null;
+  }
+  persist();
+  render();
+}
+
+function saveEntry(){
+  if(!state.selectedCropId) return;
+  if(!state.formCategory){ state.formError = "Wybierz rodzaj zabiegu"; render(); return; }
+  var product = (state.formProduct || "").trim();
+  if(!product){ state.formError = "Wpisz nazwę środka"; render(); return; }
+  var note = (state.formNote || "").trim();
+  if(state.editingId){
+    var entry = state.entries.find(function(e){ return e.id === state.editingId; });
+    if(entry){
+      entry.date = state.formDate;
+      entry.category = state.formCategory;
+      entry.product = product;
+      entry.note = note;
+    }
+  } else {
+    state.entries.push({ id: genId(), cropId: state.selectedCropId, date: state.formDate, category: state.formCategory, product: product, note: note });
+  }
+  persist();
+  resetFormFields();
+  render();
+}
+
+function startEdit(id){
+  var entry = state.entries.find(function(e){ return e.id === id; });
+  if(!entry) return;
+  state.formDate = entry.date;
+  state.formCategory = entry.category;
+  state.formProduct = entry.product;
+  state.formNote = entry.note || "";
+  state.formError = "";
+  state.editingId = entry.id;
+  render();
+  var formEl = document.getElementById("entry-form");
+  if(formEl) formEl.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function deleteEntry(id){
+  state.entries = state.entries.filter(function(e){ return e.id !== id; });
+  state.confirmDeleteId = null;
+  if(state.editingId === id) resetFormFields();
+  persist();
+  render();
+}
+
+function scheduleCropConfirmTimeout(id){
+  setTimeout(function(){
+    if(state.confirmDeleteCropId === id){ state.confirmDeleteCropId = null; render(); }
+  }, 3000);
+}
+
+function scheduleEntryConfirmTimeout(id){
+  setTimeout(function(){
+    if(state.confirmDeleteId === id){ state.confirmDeleteId = null; render(); }
+  }, 3000);
+}
+
+function exportData(){
+  var data = JSON.stringify({ crops: state.crops, entries: state.entries }, null, 2);
+  var blob = new Blob([data], { type: "application/json" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = "dziennik-opryskow-kopia-" + todayStr() + ".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importData(file){
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    try{
+      var data = JSON.parse(ev.target.result);
+      if(!data || !Array.isArray(data.crops) || !Array.isArray(data.entries)){
+        alert("Ten plik nie wygląda na poprawną kopię dziennika.");
+        return;
+      }
+      if(!confirm("Wczytanie kopii zastąpi aktualne dane w tym programie. Kontynuować?")) return;
+      state.crops = data.crops;
+      state.entries = data.entries;
+      state.selectedCropId = data.crops[0] ? data.crops[0].id : null;
+      resetFormFields();
+      persist();
+      render();
+      alert("Kopia wczytana.");
+    } catch(e){
+      alert("Nie udało się wczytać pliku: " + e.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function handleClick(e){
+  var btn = e.target.closest("[data-action]");
+  if(!btn) return;
+  var action = btn.dataset.action;
+  var id = btn.dataset.id;
+  if(action === "select-crop"){ state.selectedCropId = id; render(); }
+  else if(action === "toggle-manage-crops"){ state.manageCrops = !state.manageCrops; render(); }
+  else if(action === "request-delete-crop"){ state.confirmDeleteCropId = id; render(); scheduleCropConfirmTimeout(id); }
+  else if(action === "confirm-delete-crop"){ deleteCrop(id); }
+  else if(action === "show-add-crop"){ state.addingCrop = true; render(); }
+  else if(action === "confirm-add-crop"){ addCrop(); }
+  else if(action === "cancel-add-crop"){ state.addingCrop = false; state.newCropName = ""; render(); }
+  else if(action === "select-category"){ state.formCategory = id; render(); }
+  else if(action === "save-entry"){ saveEntry(); }
+  else if(action === "cancel-edit"){ resetFormFields(); render(); }
+  else if(action === "set-filter"){ state.filterCategory = id; render(); }
+  else if(action === "edit-entry"){ startEdit(id); }
+  else if(action === "request-delete-entry"){ state.confirmDeleteId = id; render(); scheduleEntryConfirmTimeout(id); }
+  else if(action === "confirm-delete-entry"){ deleteEntry(id); }
+  else if(action === "export-data"){ exportData(); }
+  else if(action === "trigger-import"){ document.getElementById("import-file").click(); }
+}
+
+function handleInput(e){
+  var field = e.target.dataset.field;
+  if(!field) return;
+  state[field] = e.target.value;
+}
+
+function handleKeydown(e){
+  var field = e.target.dataset.field;
+  if(field === "newCropName"){
+    if(e.key === "Enter"){ addCrop(); }
+    else if(e.key === "Escape"){ state.addingCrop = false; state.newCropName = ""; render(); }
+  } else if(field === "formNote"){
+    if(e.key === "Enter"){ saveEntry(); }
+  }
+}
+
+function cropsSectionHTML(){
+  var html = '<div class="section-header"><span class="section-label">Uprawy</span>';
+  if(state.crops.length > 0){
+    html += '<button class="icon-btn" data-action="toggle-manage-crops" style="color:' + (state.manageCrops ? DANGER : INK_SOFT) + '">✎</button>';
+  }
+  html += '</div><div class="crops-row">';
+  state.crops.forEach(function(c){
+    var active = c.id === state.selectedCropId;
+    html += '<div class="chip"><button class="chip-btn" data-action="select-crop" data-id="' + c.id + '" style="border-color:' + (active?INK:LINE) + ';background:' + (active?INK:SURFACE) + ';color:' + (active?SURFACE:INK) + '">' + esc(c.name) + '</button>';
+    if(state.manageCrops){
+      if(state.confirmDeleteCropId === c.id){
+        html += '<button class="chip-del" data-action="confirm-delete-crop" data-id="' + c.id + '" style="font-size:10px;">OK</button>';
+      } else {
+        html += '<button class="chip-del" data-action="request-delete-crop" data-id="' + c.id + '">×</button>';
+      }
+    }
+    html += '</div>';
+  });
+  if(!state.addingCrop){
+    html += '<button class="chip-add" data-action="show-add-crop"><span style="font-size:14px">+</span> Dodaj</button>';
+  } else {
+    html += '<div class="add-crop-form">' +
+      '<input id="input-new-crop" data-field="newCropName" value="' + esc(state.newCropName) + '" placeholder="np. Pomidory" />' +
+      '<button class="icon-btn-solid" data-action="confirm-add-crop">✓</button>' +
+      '<button class="icon-btn-outline" data-action="cancel-add-crop">×</button>' +
+    '</div>';
+  }
+  html += '</div>';
+  if(state.crops.length === 0){
+    html += '<p class="empty-msg">Dodaj pierwszą uprawę, np. Ogórki, żeby zacząć notować zabiegi.</p>';
+  }
+  return html;
+}
+
+function summarySectionHTML(selectedCrop){
+  var cropEntries = state.entries.filter(function(e){ return e.cropId === selectedCrop.id; });
+  var lastByCategory = {};
+  cropEntries.forEach(function(e){
+    if(!lastByCategory[e.category] || e.date > lastByCategory[e.category].date) lastByCategory[e.category] = e;
+  });
+  var html = '<div class="summary-block"><span class="section-label">Ostatnio — ' + esc(selectedCrop.name) + '</span><div class="summary-grid">';
+  CATEGORIES.forEach(function(cat){
+    var last = lastByCategory[cat.id];
+    html += '<div class="summary-card" style="background:' + cat.tint + ';border-left-color:' + cat.accent + '">' +
+      '<div class="summary-cat-label" style="color:' + cat.accent + '">' + cat.label + '</div>';
+    if(last){
+      html += '<div class="summary-date">' + formatDateDisplay(last.date).full + '</div>' +
+        '<div class="summary-product">' + esc(last.product) + '</div>';
+    } else {
+      html += '<div class="summary-empty">brak wpisów</div>';
+    }
+    html += '</div>';
+  });
+  html += '</div></div>';
+  return html;
+}
+
+function formSectionHTML(){
+  var html = '<div class="form-card" id="entry-form">' +
+    '<span class="section-label" style="margin-bottom:8px;">' + (state.editingId ? "Edytuj wpis" : "Nowy wpis") + '</span>' +
+    '<input id="input-date" type="date" class="date-input" data-field="formDate" value="' + esc(state.formDate) + '" />' +
+    '<div class="cat-row">';
+  CATEGORIES.forEach(function(cat){
+    var active = state.formCategory === cat.id;
+    html += '<button class="cat-btn" data-action="select-category" data-id="' + cat.id + '" style="border-color:' + cat.accent + ';background:' + (active?cat.accent:cat.tint) + ';color:' + (active?'#FBF8F0':cat.accent) + '">' + cat.label + '</button>';
+  });
+  html += '</div>' +
+    '<input id="input-product" class="text-input" data-field="formProduct" list="product-suggestions" placeholder="Środek, np. Topsin M" value="' + esc(state.formProduct) + '" />' +
+    '<datalist id="product-suggestions">';
+  productSuggestions().forEach(function(p){ html += '<option value="' + esc(p) + '"></option>'; });
+  html += '</datalist>' +
+    '<input id="input-note" class="text-input" data-field="formNote" placeholder="Notatka (opcjonalnie)" value="' + esc(state.formNote) + '" />';
+  if(state.formError){
+    html += '<p class="form-error">' + esc(state.formError) + '</p>';
+  }
+  html += '<div class="form-actions"><button class="btn-primary" data-action="save-entry">' + (state.editingId ? "Zapisz zmiany" : "Zapisz wpis") + '</button>';
+  if(state.editingId){
+    html += '<button class="btn-secondary" data-action="cancel-edit">Anuluj</button>';
+  }
+  html += '</div></div>';
+  return html;
+}
+
+function filterSectionHTML(){
+  var html = '<div class="filter-row">' +
+    '<button class="filter-btn" data-action="set-filter" data-id="all" style="border-color:' + (state.filterCategory==='all'?INK:LINE) + ';background:' + (state.filterCategory==='all'?INK:'transparent') + ';color:' + (state.filterCategory==='all'?SURFACE:INK_SOFT) + '">Wszystko</button>';
+  CATEGORIES.forEach(function(cat){
+    var active = state.filterCategory === cat.id;
+    html += '<button class="filter-btn" data-action="set-filter" data-id="' + cat.id + '" style="border-color:' + (active?cat.accent:LINE) + ';background:' + (active?cat.accent:'transparent') + ';color:' + (active?'#FBF8F0':INK_SOFT) + '">' + cat.label + '</button>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function logSectionHTML(){
+  var cropEntries = state.entries.filter(function(e){ return e.cropId === state.selectedCropId; });
+  var filtered = cropEntries.filter(function(e){ return state.filterCategory === "all" || e.category === state.filterCategory; })
+    .sort(function(a,b){ return b.date.localeCompare(a.date); });
+  var grouped = [];
+  var groupMap = {};
+  filtered.forEach(function(e){
+    var key = e.date.slice(0,7);
+    if(!groupMap[key]){ groupMap[key] = []; grouped.push(key); }
+    groupMap[key].push(e);
+  });
+  var html = '<div class="log-section">';
+  if(grouped.length === 0 && cropEntries.length === 0){
+    html += '<p class="empty-msg">Brak wpisów dla tej uprawy — dodaj pierwszy oprysk powyżej.</p>';
+  } else if(grouped.length === 0){
+    html += '<p class="empty-msg">Brak wpisów w wybranej kategorii.</p>';
+  }
+  grouped.forEach(function(key){
+    html += '<div class="month-group"><div class="month-label">' + monthLabelFromKey(key) + '</div>';
+    groupMap[key].forEach(function(e){
+      var cat = CATEGORIES.find(function(c){ return c.id === e.category; }) || CATEGORIES[CATEGORIES.length-1];
+      var d = formatDateDisplay(e.date);
+      var confirming = state.confirmDeleteId === e.id;
+      html += '<div class="entry-row">' +
+        '<div class="entry-date"><span class="entry-date-num">' + d.dd + '.' + d.mm + '</span><span class="entry-date-wd">' + d.wd + '</span></div>' +
+        '<div class="entry-badge-wrap"><span class="entry-badge" style="border-color:' + cat.accent + ';background:' + cat.tint + ';color:' + cat.accent + ';transform:rotate(' + cat.rotate + 'deg)">' + cat.short + '</span></div>' +
+        '<div class="entry-body"><div class="entry-product">' + esc(e.product) + '</div>' + (e.note ? '<div class="entry-note">' + esc(e.note) + '</div>' : '') + '</div>' +
+        '<div class="entry-actions">' +
+          '<button class="icon-btn" data-action="edit-entry" data-id="' + e.id + '">✎</button>' +
+          (confirming
+            ? '<button class="confirm-btn" data-action="confirm-delete-entry" data-id="' + e.id + '">OK?</button>'
+            : '<button class="icon-btn-danger" data-action="request-delete-entry" data-id="' + e.id + '">🗑</button>') +
+        '</div>' +
+      '</div>';
+    });
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function render(){
+  var root = document.getElementById("root");
+  if(!state.loaded){ root.innerHTML = '<p class="loading">Wczytywanie…</p>'; return; }
+  var html = '<div class="container"><h1>Dziennik oprysków</h1><p class="subtitle">uprawy · zabiegi · terminy</p>';
+  html += '<div class="backup-row">' +
+    '<button class="backup-btn" data-action="export-data">⤓ Eksportuj kopię</button>' +
+    '<button class="backup-btn" data-action="trigger-import">⤒ Wczytaj kopię</button>' +
+    '<input type="file" id="import-file" accept="application/json,.json" style="display:none" />' +
+  '</div>';
+  html += cropsSectionHTML();
+  var selectedCrop = state.crops.find(function(c){ return c.id === state.selectedCropId; }) || null;
+  if(selectedCrop){
+    html += summarySectionHTML(selectedCrop);
+    html += formSectionHTML();
+    html += filterSectionHTML();
+    html += logSectionHTML();
+  }
+  html += '</div>';
+  root.innerHTML = html;
+  if(state.addingCrop){
+    var el = document.getElementById("input-new-crop");
+    if(el){ el.focus(); }
+  }
+}
+
+function handleChange(e){
+  if(e.target.id === "import-file"){
+    var file = e.target.files && e.target.files[0];
+    if(file) importData(file);
+    e.target.value = "";
+  }
+}
+
+function init(){
+  loadState();
+  var root = document.getElementById("root");
+  root.addEventListener("click", handleClick);
+  root.addEventListener("input", handleInput);
+  root.addEventListener("keydown", handleKeydown);
+  root.addEventListener("change", handleChange);
+  render();
+}
+
+init();
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("service-worker.js").catch(function(e){
+      console.error("Rejestracja service workera nie powiodła się", e);
+    });
+  });
+}
+</script>
+</body>
+</html>
